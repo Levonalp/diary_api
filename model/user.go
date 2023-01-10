@@ -49,3 +49,4 @@ func FindUserById(id uint) (User, error) {
     }
     return user, nil
 }
+
