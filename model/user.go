@@ -49,4 +49,14 @@ func FindUserById(id uint) (User, error) {
     }
     return user, nil
 }
+func (u *User) Delete() error {
+    return database.Database.Delete(u).Error
+}
+
+func (u *User) GetEntryById(id int) (*Entry, error) {
+    var entry Entry
+    result := database.Database.Where("id = ?", id).First(&entry)
+    return &entry, result.Error
+}
+
 

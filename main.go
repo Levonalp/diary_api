@@ -7,11 +7,12 @@ import (
     "diary_api/model"
     "fmt"
     "log"
-
+    "github.com/gin-contrib/cors"
     "github.com/gin-gonic/gin"
     "github.com/joho/godotenv"
+	
+	
 )
-
 
 func main() {
     loadEnv()
@@ -43,8 +44,12 @@ func serveApplication() {
     protectedRoutes.Use(middleware.JWTAuthMiddleware())
     protectedRoutes.POST("/entry", controller.AddEntry)
     protectedRoutes.GET("/entry", controller.GetAllEntries)
+    protectedRoutes.PUT("/entry/:id", controller.UpdateEntry)
+    protectedRoutes.DELETE("/entry/:id", controller.DeleteEntry)
+    protectedRoutes.PUT("/user/:id", controller.UpdateUser)
+    protectedRoutes.DELETE("/user/:id", controller.DeleteUser)
 
+    router.Use(cors.Default())
     router.Run(":8000")
     fmt.Println("Server running on port 8000")
 }
-
