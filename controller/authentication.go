@@ -31,7 +31,6 @@ func Register(context *gin.Context) {
 
     context.JSON(http.StatusCreated, gin.H{"user": savedUser})
 }
-
 func Login(context *gin.Context) {
     var input model.AuthenticationInput
 
@@ -54,14 +53,14 @@ func Login(context *gin.Context) {
         return
     }
 
-    jwt, err := helper.GenerateJWT(user)
+    jwt, err := helper.GenerateJWT(user, context)
     if err != nil {
         context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
 
     context.JSON(http.StatusOK, gin.H{"jwt": jwt})
-} 
+}
 func UpdateUser(context *gin.Context) {
 	userId, err := strconv.Atoi(context.Params.ByName("id"))
     if err != nil {

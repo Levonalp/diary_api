@@ -8,7 +8,6 @@ import (
     "strconv"
     "strings"
     "time"
-
     "github.com/gin-gonic/gin"
     "github.com/golang-jwt/jwt/v4"
 )
@@ -16,15 +15,23 @@ import (
 
 var privateKey = []byte(os.Getenv("JWT_PRIVATE_KEY"))
 
-func GenerateJWT(user model.User) (string, error) {
+func GenerateJWT(user model.User, context *gin.Context) (string, error) {
     tokenTTL, _ := strconv.Atoi(os.Getenv("TOKEN_TTL"))
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
         "id":  user.ID,
         "iat": time.Now().Unix(),
         "eat": time.Now().Add(time.Second * time.Duration(tokenTTL)).Unix(),
     })
-    return token.SignedString(privateKey)
+    tokenString, err := token.SignedString(privateKey)
+    if err != nil {
+        return "", err
+    }
+    //set the token as the value of the cookie
+    context.SetCookie("jwt_token", tokenString, int(time.Duration(tokenTTL) * time.Second), "/", "", false, true)
+    return tokenString, nil
 }
+
+
 
 func ValidateJWT(context *gin.Context) error {
     token, err := getToken(context)
