@@ -1,74 +1,34 @@
 package main
 
 import (
-    "diary_api/controller"
-    "diary_api/database"
-    "diary_api/middleware"
-    "diary_api/model"
-    "fmt"
-    "log"
-    "github.com/gin-contrib/cors"
-    "github.com/gin-gonic/gin"
-    "github.com/joho/godotenv"
-
-	
+	"diary_api/db"
+	"diary_api/controllers"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-    loadEnv()
-    loadDatabase()
-    serveApplication()
-}
+	db.Connect()
+	defer db.GetDB().Close()
 
-func loadEnv() {
-    err := godotenv.Load(".env.local")
-    if err != nil {
-        log.Fatal("Error loading .env file")
-    }
-}
+	r := gin.Default()
 
-func loadDatabase() {
-    database.Connect()
-    database.Database.AutoMigrate(&model.User{})
-    database.Database.AutoMigrate(&model.Entry{})
-}
+	v1 := r.Group("/api/v1")
+	{
+		v1.GET("/diaries", controllers.GetAllDiaries)
+		v1.GET("/diary/:id", controllers.GetDiaryByID)
+		v1.POST("/diary", controllers.CreateDiary)
+		v1.PUT("/diary/:id", controllers.UpdateDiary)
 
-func corsMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-		c.Writer.Header().Set("Access-Control-Max-Age", "86400")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, UPDATE")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-		c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length")
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		v1.GET("/titles", controllers.GetAllTitles)
+		v1.GET("/title/:id", controllers.GetTitleByID)
+		v1.POST("/title", controllers.CreateTitle)
+		v1.PUT("/title/:id", controllers.UpdateTitle)
 
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(200)
-		} else {
-			c.Next()
-		}
+		v1.GET("/photos", controllers.GetAllPhotos)
+		v1.GET("/photo/:id", controllers.GetPhotoByID)
+		v1.POST("/photo", controllers.CreatePhoto)
+		v1.PUT("/photo/:id", controllers.UpdatePhoto)
 	}
-}
 
-
-func serveApplication() {
-
-	router := gin.Default()
-    
-    publicRoutes := router.Group("/auth")
-    publicRoutes.POST("/register", controller.Register)
-    publicRoutes.POST("/login", controller.Login)
-
-    protectedRoutes := router.Group("/api")
-    protectedRoutes.Use(middleware.JWTAuthMiddleware())
-    protectedRoutes.POST("/entry", controller.AddEntry)
-    protectedRoutes.GET("/entry", controller.GetAllEntries)
-    protectedRoutes.PUT("/entry/:id", controller.UpdateEntry)
-    protectedRoutes.DELETE("/entry/:id", controller.DeleteEntry)
-    protectedRoutes.PUT("/user/:id", controller.UpdateUser)
-    protectedRoutes.DELETE("/user/:id", controller.DeleteUser)
-
-    router.Use(cors.Default())
-    router.Run(":8000")
-    fmt.Println("Server running on port 8000")
+	r.Run()
 }
